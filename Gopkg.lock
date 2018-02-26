@@ -44,16 +44,6 @@
   version = "0.0.3"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/pmorie/osb-starter-pack"
-  packages = [
-    "pkg/broker",
-    "pkg/metrics",
-    "pkg/rest"
-  ]
-  revision = "b8dfc9fa770bb4fe31a07f2c28f59b1ff04d5e1b"
-
-[[projects]]
   name = "github.com/prometheus/client_golang"
   packages = [
     "prometheus",
@@ -92,6 +82,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "29bc4aa7662bcd605bc567190ad8d55b4c6a4c4044c92ecf8f27c22cdf0b0b8b"
+  inputs-digest = "b5f4913ed131df3a976a1717d853eef781e418f1cc34950bf04e07a2515f9897"
   solver-name = "gps-cdcl"
   solver-version = 1

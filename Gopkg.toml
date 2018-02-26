@@ -38,10 +38,6 @@
   version = "0.0.3"
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/pmorie/osb-starter-pack"
-
-[[constraint]]
   name = "github.com/prometheus/client_golang"
   version = "0.8.0"
 
