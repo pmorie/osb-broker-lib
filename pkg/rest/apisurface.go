@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -79,9 +80,16 @@ func (s *APISurface) ProvisionHandler(w http.ResponseWriter, r *http.Request) {
 
 	glog.Infof("Received ProvisionRequest for instanceID %q", request.InstanceID)
 
+	identity, err := retrieveOriginatingIdentity(r)
+	if err != nil {
+		writeError(w, err, http.StatusBadRequest)
+		return
+	}
+
 	c := &broker.RequestContext{
-		Writer:  w,
-		Request: r,
+		Writer:   w,
+		Request:  r,
+		Identity: identity,
 	}
 
 	response, err := s.BusinessLogic.Provision(request, c)
@@ -138,10 +146,16 @@ func (s *APISurface) DeprovisionHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	glog.Infof("Received DeprovisionRequest for instanceID %q", request.InstanceID)
+	identity, err := retrieveOriginatingIdentity(r)
+	if err != nil {
+		writeError(w, err, http.StatusBadRequest)
+		return
+	}
 
 	c := &broker.RequestContext{
-		Writer:  w,
-		Request: r,
+		Writer:   w,
+		Request:  r,
+		Identity: identity,
 	}
 
 	response, err := s.BusinessLogic.Deprovision(request, c)
@@ -252,10 +266,16 @@ func (s *APISurface) BindHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	glog.Infof("Received BindRequest for instanceID %q, bindingID %q", request.InstanceID, request.BindingID)
+	identity, err := retrieveOriginatingIdentity(r)
+	if err != nil {
+		writeError(w, err, http.StatusBadRequest)
+		return
+	}
 
 	c := &broker.RequestContext{
-		Writer:  w,
-		Request: r,
+		Writer:   w,
+		Request:  r,
+		Identity: identity,
 	}
 
 	response, err := s.BusinessLogic.Bind(request, c)
@@ -299,10 +319,16 @@ func (s *APISurface) UnbindHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	glog.Infof("Received UnbindRequest for instanceID %q, bindingID %q", request.InstanceID, request.BindingID)
+	identity, err := retrieveOriginatingIdentity(r)
+	if err != nil {
+		writeError(w, err, http.StatusBadRequest)
+		return
+	}
 
 	c := &broker.RequestContext{
-		Writer:  w,
-		Request: r,
+		Writer:   w,
+		Request:  r,
+		Identity: identity,
 	}
 
 	response, err := s.BusinessLogic.Unbind(request, c)
@@ -344,9 +370,15 @@ func (s *APISurface) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	glog.Infof("Received Update Request for instanceID %q", request.InstanceID)
 
+	identity, err := retrieveOriginatingIdentity(r)
+	if err != nil {
+		writeError(w, err, http.StatusBadRequest)
+		return
+	}
 	c := &broker.RequestContext{
-		Writer:  w,
-		Request: r,
+		Writer:   w,
+		Request:  r,
+		Identity: identity,
 	}
 
 	response, err := s.BusinessLogic.Update(request, c)
@@ -375,4 +407,17 @@ func unpackUpdateRequest(r *http.Request) (*osb.UpdateInstanceRequest, error) {
 	}
 
 	return osbRequest, nil
+}
+
+func retrieveOriginatingIdentity(r *http.Request) (broker.Identity, error) {
+	identityHeader := r.Header.Get("OriginatingIdentityHeader")
+	if identityHeader != "" {
+		identitySlice := strings.Split(identityHeader, " ")
+		if len(identitySlice) != 2 {
+			glog.Infof("invalid header for originating origin header - %v", identityHeader)
+			return nil, fmt.Errorf("invalid originating identity header")
+		}
+		return broker.NewIdentity(identitySlice[0], identitySlice[1])
+	}
+	return nil, fmt.Errorf("unable to find originating identity")
 }
