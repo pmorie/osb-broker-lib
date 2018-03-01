@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -63,6 +64,17 @@ func TestBind(t *testing.T) {
 			},
 			response: &osb.BindResponse{},
 		},
+		{
+			name: "bind check originating origin identity is passed",
+			bindFunc: func(req *osb.BindRequest, c *broker.RequestContext) (*osb.BindResponse, error) {
+				if req.OriginatingIdentity != nil {
+
+					return &osb.BindResponse{}, nil
+				}
+				return nil, fmt.Errorf("oops")
+			},
+			response: &osb.BindResponse{},
+		},
 	}
 
 	for i := range cases {
@@ -97,12 +109,17 @@ func TestBind(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
+			o := osb.OriginatingIdentity{
+				Platform: "kubernetes",
+				Value:    `{"username":"test", "groups": [], "extra": {}}`,
+			}
 
 			actualResponse, err := client.Bind(&osb.BindRequest{
-				BindingID:  "12345",
-				InstanceID: "12345",
-				ServiceID:  "12345",
-				PlanID:     "12345",
+				BindingID:           "12345",
+				InstanceID:          "12345",
+				ServiceID:           "12345",
+				PlanID:              "12345",
+				OriginatingIdentity: &o,
 			})
 			if err != nil {
 				if tc.err != nil {

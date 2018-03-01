@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -63,6 +64,16 @@ func TestUnbind(t *testing.T) {
 			},
 			response: &osb.UnbindResponse{},
 		},
+		{
+			name: "unbind check originating origin identity is passed",
+			unbindFunc: func(req *osb.UnbindRequest, c *broker.RequestContext) (*osb.UnbindResponse, error) {
+				if req.OriginatingIdentity != nil {
+					return &osb.UnbindResponse{}, nil
+				}
+				return nil, fmt.Errorf("oops")
+			},
+			response: &osb.UnbindResponse{},
+		},
 	}
 
 	for i := range cases {
@@ -97,12 +108,17 @@ func TestUnbind(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
+			o := osb.OriginatingIdentity{
+				Platform: "kubernetes",
+				Value:    `{"username":"test", "groups": [], "extra": {}}`,
+			}
 
 			actualResponse, err := client.Unbind(&osb.UnbindRequest{
-				BindingID:  "12345",
-				InstanceID: "12345",
-				ServiceID:  "12345",
-				PlanID:     "12345",
+				BindingID:           "12345",
+				InstanceID:          "12345",
+				ServiceID:           "12345",
+				PlanID:              "12345",
+				OriginatingIdentity: &o,
 			})
 			if err != nil {
 				if tc.err != nil {

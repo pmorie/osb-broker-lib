@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -74,6 +75,21 @@ func TestUpdateInstance(t *testing.T) {
 				Async: true,
 			},
 		},
+		{
+			name: "update check originating origin identity is passed",
+			updateFunc: func(req *osb.UpdateInstanceRequest, c *broker.RequestContext) (*osb.UpdateInstanceResponse, error) {
+				if req.OriginatingIdentity != nil {
+
+					return &osb.UpdateInstanceResponse{
+						Async: true,
+					}, nil
+				}
+				return nil, fmt.Errorf("oops")
+			},
+			response: &osb.UpdateInstanceResponse{
+				Async: true,
+			},
+		},
 	}
 
 	for i := range cases {
@@ -108,11 +124,16 @@ func TestUpdateInstance(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
+			o := osb.OriginatingIdentity{
+				Platform: "kubernetes",
+				Value:    `{"username":"test", "groups": [], "extra": {}}`,
+			}
 
 			actualResponse, err := client.UpdateInstance(&osb.UpdateInstanceRequest{
-				InstanceID:        "12345",
-				ServiceID:         "12345",
-				AcceptsIncomplete: true,
+				InstanceID:          "12345",
+				ServiceID:           "12345",
+				AcceptsIncomplete:   true,
+				OriginatingIdentity: &o,
 			})
 			if err != nil {
 				if tc.err != nil {

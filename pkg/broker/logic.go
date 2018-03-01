@@ -167,7 +167,6 @@ type BusinessLogic interface {
 // - the original http request, in case access is required (to get special
 //   request headers, for example)
 type RequestContext struct {
-	Writer   http.ResponseWriter
-	Request  *http.Request
-	Identity Identity
+	Writer  http.ResponseWriter
+	Request *http.Request
 }
