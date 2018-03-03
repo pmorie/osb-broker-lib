@@ -407,6 +407,8 @@ func unpackUpdateRequest(r *http.Request) (*osb.UpdateInstanceRequest, error) {
 	return osbRequest, nil
 }
 
+// retrieveOriginatingIdentity retrieves the originating identity from
+// the request header.
 func retrieveOriginatingIdentity(r *http.Request) (*osb.OriginatingIdentity, error) {
 	identityHeader := r.Header.Get(osb.OriginatingIdentityHeader)
 	if identityHeader != "" {

@@ -76,7 +76,7 @@ func TestDeprovision(t *testing.T) {
 			},
 		},
 		{
-			name: "deprovision passes originating origin idenity is passed",
+			name: "deprovision check originating origin idenity is passed",
 			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*osb.DeprovisionResponse, error) {
 				if req.OriginatingIdentity != nil {
 					return &osb.DeprovisionResponse{
