@@ -2,6 +2,7 @@ package server
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -74,6 +75,20 @@ func TestDeprovision(t *testing.T) {
 				Async: true,
 			},
 		},
+		{
+			name: "deprovision check originating origin idenity is passed",
+			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*osb.DeprovisionResponse, error) {
+				if req.OriginatingIdentity != nil {
+					return &osb.DeprovisionResponse{
+						Async: true,
+					}, nil
+				}
+				return nil, fmt.Errorf("ops")
+			},
+			response: &osb.DeprovisionResponse{
+				Async: true,
+			},
+		},
 	}
 
 	for i := range cases {
@@ -108,12 +123,17 @@ func TestDeprovision(t *testing.T) {
 			if err != nil {
 				t.Error(err)
 			}
+			o := osb.OriginatingIdentity{
+				Platform: "kubernetes",
+				Value:    `{"username":"test", "groups": [], "extra": {}}`,
+			}
 
 			actualResponse, err := client.DeprovisionInstance(&osb.DeprovisionRequest{
-				InstanceID:        "12345",
-				ServiceID:         "12345",
-				PlanID:            "12345",
-				AcceptsIncomplete: true,
+				InstanceID:          "12345",
+				ServiceID:           "12345",
+				PlanID:              "12345",
+				AcceptsIncomplete:   true,
+				OriginatingIdentity: &o,
 			})
 			if err != nil {
 				if tc.err != nil {

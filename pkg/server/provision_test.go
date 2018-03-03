@@ -80,6 +80,23 @@ func TestProvision(t *testing.T) {
 				DashboardURL: strPtr("my.service.to/12345"),
 			},
 		},
+		{
+			name: "provision check originating origin identity is passed",
+			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error) {
+				if req.OriginatingIdentity != nil {
+
+					return &osb.ProvisionResponse{
+						Async:        true,
+						DashboardURL: strPtr("my.service.to/12345"),
+					}, nil
+				}
+				return nil, errors.New("oops")
+			},
+			response: &osb.ProvisionResponse{
+				Async:        true,
+				DashboardURL: strPtr("my.service.to/12345"),
+			},
+		},
 	}
 
 	for i := range cases {
@@ -115,13 +132,19 @@ func TestProvision(t *testing.T) {
 				t.Error(err)
 			}
 
+			o := osb.OriginatingIdentity{
+				Platform: "kubernetes",
+				Value:    `{"username":"test", "groups": [], "extra": {}}`,
+			}
+
 			actualResponse, err := client.ProvisionInstance(&osb.ProvisionRequest{
-				InstanceID:        "12345",
-				ServiceID:         "12345",
-				PlanID:            "12345",
-				OrganizationGUID:  "12345",
-				SpaceGUID:         "12345",
-				AcceptsIncomplete: true,
+				InstanceID:          "12345",
+				ServiceID:           "12345",
+				PlanID:              "12345",
+				OrganizationGUID:    "12345",
+				SpaceGUID:           "12345",
+				AcceptsIncomplete:   true,
+				OriginatingIdentity: &o,
 			})
 			if err != nil {
 				if tc.err != nil {
