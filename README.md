@@ -1,6 +1,7 @@
 # osb-broker-lib
 
 [![Build Status](https://travis-ci.org/pmorie/osb-broker-lib.svg?branch=master)](https://travis-ci.org/pmorie/osb-broker-lib "Travis")
+[![Godoc documentation](https://img.shields.io/badge/godoc-documentation-blue.svg)](https://godoc.org/github.com/pmorie/osb-broker-lib/pkg)
 
 A go library for developing an [Open Service
 Broker](https://github.com/openservicebrokerapi/servicebroker), using the
