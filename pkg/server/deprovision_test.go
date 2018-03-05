@@ -45,6 +45,16 @@ func TestDeprovision(t *testing.T) {
 			},
 		},
 		{
+			name: "deprovision validate incoming parameters",
+			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*osb.DeprovisionResponse, error) {
+				if req.PlanID == "" {
+					return nil, errors.New("deprovision request missing plan_id query parameter")
+				}
+				return &osb.DeprovisionResponse{}, nil
+			},
+			response: &osb.DeprovisionResponse{},
+		},
+		{
 			name: "deprovision returns osb.HTTPStatusCodeError",
 			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*osb.DeprovisionResponse, error) {
 				return nil, osb.HTTPStatusCodeError{
