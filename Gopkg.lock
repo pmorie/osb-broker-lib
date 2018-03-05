@@ -38,10 +38,10 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
   name = "github.com/pmorie/go-open-service-broker-client"
   packages = ["v2"]
-  revision = "b110ebaf119c4fcf81675ff01d62919d31819fd8"
-  version = "0.0.3"
+  revision = "e8aa16c9036317bd59ced8921e9da6197ab577e3"
 
 [[projects]]
   name = "github.com/prometheus/client_golang"
@@ -82,6 +82,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b5f4913ed131df3a976a1717d853eef781e418f1cc34950bf04e07a2515f9897"
+  inputs-digest = "87ec13877aea2d23ce5402c224998b296675b59c29de17c48a31b8c1a63b0924"
   solver-name = "gps-cdcl"
   solver-version = 1
