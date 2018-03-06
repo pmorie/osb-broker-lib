@@ -172,10 +172,10 @@ func unpackDeprovisionRequest(r *http.Request) (*osb.DeprovisionRequest, error) 
 
 	vars := mux.Vars(r)
 	osbRequest.InstanceID = vars[osb.VarKeyInstanceID]
-	osbRequest.ServiceID = vars[osb.VarKeyServiceID]
-	osbRequest.PlanID = vars[osb.VarKeyPlanID]
+	osbRequest.ServiceID = r.FormValue(osb.VarKeyServiceID)
+	osbRequest.PlanID = r.FormValue(osb.VarKeyPlanID)
 
-	asyncQueryParamVal := r.URL.Query().Get(osb.AcceptsIncomplete)
+	asyncQueryParamVal := r.FormValue(osb.AcceptsIncomplete)
 	if strings.ToLower(asyncQueryParamVal) == "true" {
 		osbRequest.AcceptsIncomplete = true
 	}
