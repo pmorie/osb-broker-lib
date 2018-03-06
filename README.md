@@ -6,9 +6,9 @@
 
 A go library for developing an [Open Service
 Broker](https://github.com/openservicebrokerapi/servicebroker), using the
-[`pmorie/go-open-service-broker-client`](github.com/pmorie/go-open-service-broker-client)
+[`pmorie/go-open-service-broker-client`](https://github.com/pmorie/go-open-service-broker-client)
 OSB client library types. This project was originally created as part of the
-[OSB Starter Pack](github.com/pmorie/osb-starter-pack) project.
+[OSB Starter Pack](https://github.com/pmorie/osb-starter-pack) project.
 
 ## Who should use this library?
 
