@@ -25,6 +25,7 @@ type APISurface struct {
 	// implementation for the different OSB API operations.
 	BusinessLogic broker.BusinessLogic
 	Metrics       *metrics.OSBMetricsCollector
+	EnableCORS    bool
 }
 
 // NewAPISurface returns a new, ready-to-go APISurface.
@@ -37,6 +38,11 @@ func NewAPISurface(businessLogic broker.BusinessLogic, m *metrics.OSBMetricsColl
 	return api, nil
 }
 
+// OptionsHandler deals with the OPTIONS type request allowing the client to gather the headers.
+func (s *APISurface) OptionsHandler(w http.ResponseWriter, r *http.Request) {
+	s.writeResponse(w, http.StatusOK, nil)
+}
+
 // GetCatalogHandler is the mux handler that dispatches requests to get the
 // broker's catalog to the broker's BusinessLogic.
 func (s *APISurface) GetCatalogHandler(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +50,7 @@ func (s *APISurface) GetCatalogHandler(w http.ResponseWriter, r *http.Request) {
 
 	version := getBrokerAPIVersionFromRequest(r)
 	if err := s.BusinessLogic.ValidateBrokerAPIVersion(version); err != nil {
-		writeError(w, err, http.StatusPreconditionFailed)
+		s.writeError(w, err, http.StatusPreconditionFailed)
 		return
 	}
 
@@ -55,11 +61,11 @@ func (s *APISurface) GetCatalogHandler(w http.ResponseWriter, r *http.Request) {
 
 	response, err := s.BusinessLogic.GetCatalog(c)
 	if err != nil {
-		writeError(w, err, http.StatusInternalServerError)
+		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	writeResponse(w, http.StatusOK, response)
+	s.writeResponse(w, http.StatusOK, response)
 }
 
 // ProvisionHandler is the mux handler that dispatches ProvisionRequests to the
@@ -69,13 +75,13 @@ func (s *APISurface) ProvisionHandler(w http.ResponseWriter, r *http.Request) {
 
 	version := getBrokerAPIVersionFromRequest(r)
 	if err := s.BusinessLogic.ValidateBrokerAPIVersion(version); err != nil {
-		writeError(w, err, http.StatusPreconditionFailed)
+		s.writeError(w, err, http.StatusPreconditionFailed)
 		return
 	}
 
 	request, err := unpackProvisionRequest(r)
 	if err != nil {
-		writeError(w, err, http.StatusBadRequest)
+		s.writeError(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -88,7 +94,7 @@ func (s *APISurface) ProvisionHandler(w http.ResponseWriter, r *http.Request) {
 
 	response, err := s.BusinessLogic.Provision(request, c)
 	if err != nil {
-		writeError(w, err, http.StatusInternalServerError)
+		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -97,7 +103,7 @@ func (s *APISurface) ProvisionHandler(w http.ResponseWriter, r *http.Request) {
 		status = http.StatusAccepted
 	}
 
-	writeResponse(w, status, response)
+	s.writeResponse(w, status, response)
 }
 
 // unpackProvisionRequest unpacks an osb request from the given HTTP request.
@@ -135,13 +141,13 @@ func (s *APISurface) DeprovisionHandler(w http.ResponseWriter, r *http.Request) 
 
 	version := getBrokerAPIVersionFromRequest(r)
 	if err := s.BusinessLogic.ValidateBrokerAPIVersion(version); err != nil {
-		writeError(w, err, http.StatusPreconditionFailed)
+		s.writeError(w, err, http.StatusPreconditionFailed)
 		return
 	}
 
 	request, err := unpackDeprovisionRequest(r)
 	if err != nil {
-		writeError(w, err, http.StatusInternalServerError)
+		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -154,7 +160,7 @@ func (s *APISurface) DeprovisionHandler(w http.ResponseWriter, r *http.Request) 
 
 	response, err := s.BusinessLogic.Deprovision(request, c)
 	if err != nil {
-		writeError(w, err, http.StatusInternalServerError)
+		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -163,7 +169,7 @@ func (s *APISurface) DeprovisionHandler(w http.ResponseWriter, r *http.Request) 
 		status = http.StatusAccepted
 	}
 
-	writeResponse(w, status, response)
+	s.writeResponse(w, status, response)
 }
 
 // unpackDeprovisionRequest unpacks an osb request from the given HTTP request.
@@ -195,7 +201,7 @@ func (s *APISurface) LastOperationHandler(w http.ResponseWriter, r *http.Request
 
 	version := getBrokerAPIVersionFromRequest(r)
 	if err := s.BusinessLogic.ValidateBrokerAPIVersion(version); err != nil {
-		writeError(w, err, http.StatusPreconditionFailed)
+		s.writeError(w, err, http.StatusPreconditionFailed)
 		return
 	}
 
@@ -203,7 +209,7 @@ func (s *APISurface) LastOperationHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		// TODO: This should return a 400 in this case as it is either
 		// malformed or missing mandatory data, as per the OSB spec.
-		writeError(w, err, http.StatusInternalServerError)
+		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -218,11 +224,11 @@ func (s *APISurface) LastOperationHandler(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		// TODO: This should return a 400 in this case as it is either
 		// malformed or missing mandatory data, as per the OSB spec.
-		writeError(w, err, http.StatusInternalServerError)
+		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	writeResponse(w, http.StatusOK, response)
+	s.writeResponse(w, http.StatusOK, response)
 }
 
 // unpackLastOperationRequest unpacks an osb request from the given HTTP request.
@@ -254,13 +260,13 @@ func (s *APISurface) BindHandler(w http.ResponseWriter, r *http.Request) {
 
 	version := getBrokerAPIVersionFromRequest(r)
 	if err := s.BusinessLogic.ValidateBrokerAPIVersion(version); err != nil {
-		writeError(w, err, http.StatusPreconditionFailed)
+		s.writeError(w, err, http.StatusPreconditionFailed)
 		return
 	}
 
 	request, err := unpackBindRequest(r)
 	if err != nil {
-		writeError(w, err, http.StatusInternalServerError)
+		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -273,11 +279,11 @@ func (s *APISurface) BindHandler(w http.ResponseWriter, r *http.Request) {
 
 	response, err := s.BusinessLogic.Bind(request, c)
 	if err != nil {
-		writeError(w, err, http.StatusInternalServerError)
+		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	writeResponse(w, http.StatusOK, response)
+	s.writeResponse(w, http.StatusOK, response)
 }
 
 // unpackBindRequest unpacks an osb request from the given HTTP request.
@@ -307,13 +313,13 @@ func (s *APISurface) UnbindHandler(w http.ResponseWriter, r *http.Request) {
 
 	version := getBrokerAPIVersionFromRequest(r)
 	if err := s.BusinessLogic.ValidateBrokerAPIVersion(version); err != nil {
-		writeError(w, err, http.StatusPreconditionFailed)
+		s.writeError(w, err, http.StatusPreconditionFailed)
 		return
 	}
 
 	request, err := unpackUnbindRequest(r)
 	if err != nil {
-		writeError(w, err, http.StatusInternalServerError)
+		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -325,11 +331,11 @@ func (s *APISurface) UnbindHandler(w http.ResponseWriter, r *http.Request) {
 
 	response, err := s.BusinessLogic.Unbind(request, c)
 	if err != nil {
-		writeError(w, err, http.StatusInternalServerError)
+		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
-	writeResponse(w, http.StatusOK, response)
+	s.writeResponse(w, http.StatusOK, response)
 }
 
 // unpackUnbindRequest unpacks an osb request from the given HTTP request.
@@ -356,13 +362,13 @@ func (s *APISurface) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	version := getBrokerAPIVersionFromRequest(r)
 	if err := s.BusinessLogic.ValidateBrokerAPIVersion(version); err != nil {
-		writeError(w, err, http.StatusPreconditionFailed)
+		s.writeError(w, err, http.StatusPreconditionFailed)
 		return
 	}
 
 	request, err := unpackUpdateRequest(r)
 	if err != nil {
-		writeError(w, err, http.StatusInternalServerError)
+		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -375,7 +381,7 @@ func (s *APISurface) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	response, err := s.BusinessLogic.Update(request, c)
 	if err != nil {
-		writeError(w, err, http.StatusInternalServerError)
+		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -384,7 +390,7 @@ func (s *APISurface) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		status = http.StatusAccepted
 	}
 
-	writeResponse(w, status, response)
+	s.writeResponse(w, status, response)
 }
 
 func unpackUpdateRequest(r *http.Request) (*osb.UpdateInstanceRequest, error) {
