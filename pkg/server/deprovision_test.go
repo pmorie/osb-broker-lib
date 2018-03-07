@@ -132,7 +132,7 @@ func TestDeprovision(t *testing.T) {
 			}
 
 			api := &rest.APISurface{
-				BusinessLogic: &FakeBusinessLogic{
+				Broker: &FakeBroker{
 					validateAPIVersion: validateFunc,
 					deprovision:        deprovisionFunc,
 				},
