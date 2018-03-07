@@ -69,3 +69,10 @@ func defaultClientConfiguration() *osb.ClientConfiguration {
 
 	return conf
 }
+
+func originatingIdentity() *osb.OriginatingIdentity {
+	return &osb.OriginatingIdentity{
+		Platform: "kubernetes",
+		Value:    `{"username":"test", "groups": [], "extra": {}}`,
+	}
+}
