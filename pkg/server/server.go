@@ -38,6 +38,10 @@ func New(api *rest.APISurface, reg prom.Gatherer) *Server {
 	router.HandleFunc("/v2/service_instances/{instance_id}/service_bindings/{binding_id}", api.BindHandler).Methods("PUT")
 	router.HandleFunc("/v2/service_instances/{instance_id}/service_bindings/{binding_id}", api.UnbindHandler).Methods("DELETE")
 
+	for _, extension := range api.Extensions {
+		router = extension.Extend(api, router)
+	}
+
 	router.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
 
 	return &Server{

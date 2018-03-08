@@ -25,6 +25,7 @@ type APISurface struct {
 	// implementation for the different OSB API operations.
 	BusinessLogic broker.BusinessLogic
 	Metrics       *metrics.OSBMetricsCollector
+	Extensions    []FeatureExtender
 }
 
 // NewAPISurface returns a new, ready-to-go APISurface.
@@ -32,6 +33,22 @@ func NewAPISurface(businessLogic broker.BusinessLogic, m *metrics.OSBMetricsColl
 	api := &APISurface{
 		BusinessLogic: businessLogic,
 		Metrics:       m,
+	}
+
+	return api, nil
+}
+
+// NewExtendedAPISurface returns a new APISurface extended with features enabled
+// by extensions. These extensions are typically proposed features
+// in the "validation through implementation" phase of the OSB spec that have
+// yet to graduate to the master API.
+func NewExtendedAPISurface(businessLogic broker.BusinessLogic,
+	m *metrics.OSBMetricsCollector, extensions []FeatureExtender) (*APISurface, error) {
+
+	api := &APISurface{
+		BusinessLogic: businessLogic,
+		Metrics:       m,
+		Extensions:    extensions,
 	}
 
 	return api, nil
@@ -387,6 +404,111 @@ func (s *APISurface) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, status, response)
 }
 
+func (s *APISurface) GetBindingHandler(
+	w http.ResponseWriter, r *http.Request, asyncBindLogic AsyncBindLogic) {
+	s.Metrics.Actions.WithLabelValues("get_binding").Inc()
+
+	version := getBrokerAPIVersionFromRequest(r)
+	if err := s.BusinessLogic.ValidateBrokerAPIVersion(version); err != nil {
+		writeError(w, err, http.StatusPreconditionFailed)
+		return
+	}
+
+	request, err := unpackGetBindingRequest(r)
+	if err != nil {
+		writeError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	glog.Infof("Received GetBinding request for instanceID %q, bindingID %q", request.InstanceID, request.BindingID)
+
+	c := &broker.RequestContext{
+		Writer:  w,
+		Request: r,
+	}
+
+	response, err := asyncBindLogic.GetBinding(request, c)
+	if err != nil {
+		writeError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	writeResponse(w, http.StatusOK, response)
+}
+
+func unpackGetBindingRequest(r *http.Request) (*osb.GetBindingRequest, error) {
+	request := &osb.GetBindingRequest{}
+	vars := mux.Vars(r)
+
+	request.InstanceID = vars[osb.VarKeyInstanceID]
+	request.BindingID = vars[osb.VarKeyInstanceID]
+
+	return request, nil
+}
+
+func (s *APISurface) BindingLastOperationHandler(
+	w http.ResponseWriter, r *http.Request, asyncBindLogic AsyncBindLogic) {
+	s.Metrics.Actions.WithLabelValues("binding_last_operation").Inc()
+
+	version := getBrokerAPIVersionFromRequest(r)
+	if err := s.BusinessLogic.ValidateBrokerAPIVersion(version); err != nil {
+		writeError(w, err, http.StatusPreconditionFailed)
+		return
+	}
+
+	request, err := unpackBindingLastOperationRequest(r)
+	if err != nil {
+		writeError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	glog.Infof("Received BindingLastOperationRequest for instanceID %q, bindingID %q", request.InstanceID, request.BindingID)
+
+	c := &broker.RequestContext{
+		Writer:  w,
+		Request: r,
+	}
+
+	response, err := asyncBindLogic.BindingLastOperation(request, c)
+	if err != nil {
+		writeError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	writeResponse(w, http.StatusOK, response)
+}
+
+func unpackBindingLastOperationRequest(r *http.Request) (*osb.BindingLastOperationRequest, error) {
+	vars := mux.Vars(r)
+
+	request := &osb.BindingLastOperationRequest{}
+	request.InstanceID = vars[osb.VarKeyInstanceID]
+	request.BindingID = vars[osb.VarKeyInstanceID]
+
+	serviceID := r.FormValue(osb.VarKeyServiceID)
+	if serviceID != "" {
+		request.ServiceID = &serviceID
+	}
+	planID := r.FormValue(osb.VarKeyPlanID)
+	if planID != "" {
+		request.PlanID = &planID
+	}
+
+	operation := r.FormValue(osb.VarKeyOperation)
+	if operation != "" {
+		typedOperation := osb.OperationKey(operation)
+		request.OperationKey = &typedOperation
+	}
+
+	identity, err := retrieveOriginatingIdentity(r)
+	if err != nil {
+		return nil, err
+	}
+	request.OriginatingIdentity = identity
+
+	return request, nil
+}
+
 func unpackUpdateRequest(r *http.Request) (*osb.UpdateInstanceRequest, error) {
 	osbRequest := &osb.UpdateInstanceRequest{}
 
@@ -429,4 +551,29 @@ func retrieveOriginatingIdentity(r *http.Request) (*osb.OriginatingIdentity, err
 		}, nil
 	}
 	return nil, fmt.Errorf("unable to find originating identity")
+}
+
+type FeatureExtender interface {
+	Extend(api *APISurface, router *mux.Router) *mux.Router
+}
+
+type AsyncBindLogic interface {
+	GetBinding(request *osb.GetBindingRequest, c *broker.RequestContext) (*osb.GetBindingResponse, error)
+	BindingLastOperation(request *osb.BindingLastOperationRequest, c *broker.RequestContext) (*osb.LastOperationResponse, error)
+}
+
+type AsyncBindExtension struct {
+	Logic AsyncBindLogic
+}
+
+func (e *AsyncBindExtension) Extend(api *APISurface, router *mux.Router) *mux.Router {
+	router.HandleFunc("/v2/service_instances/{instance_uuid}/service_bindings/{binding_uuid}",
+		func(w http.ResponseWriter, r *http.Request) {
+			api.GetBindingHandler(w, r, e.Logic)
+		}).Methods("GET")
+	router.HandleFunc("/v2/service_instances/{instance_uuid}/service_bindings/{binding_uuid}/last_operation",
+		func(w http.ResponseWriter, r *http.Request) {
+			api.BindingLastOperationHandler(w, r, e.Logic)
+		}).Methods("GET")
+	return router
 }
