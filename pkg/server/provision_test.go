@@ -132,7 +132,7 @@ func TestProvision(t *testing.T) {
 			}
 
 			api := &rest.APISurface{
-				BusinessLogic: &FakeBusinessLogic{
+				Broker: &FakeBroker{
 					validateAPIVersion: validateFunc,
 					provision:          provisionFunc,
 				},
