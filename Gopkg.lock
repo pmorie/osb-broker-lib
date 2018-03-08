@@ -40,8 +40,8 @@
 [[projects]]
   name = "github.com/pmorie/go-open-service-broker-client"
   packages = ["v2"]
-  revision = "b110ebaf119c4fcf81675ff01d62919d31819fd8"
-  version = "0.0.3"
+  revision = "e8aa16c9036317bd59ced8921e9da6197ab577e3"
+  version = "0.0.5"
 
 [[projects]]
   name = "github.com/prometheus/client_golang"
@@ -66,7 +66,7 @@
     "internal/bitbucket.org/ww/goautoneg",
     "model"
   ]
-  revision = "89604d197083d4781071d3c65855d24ecfb0a563"
+  revision = "6fb6fce6f8b75884b92e1889c150403fc0872c5e"
 
 [[projects]]
   branch = "master"
@@ -77,11 +77,11 @@
     "nfs",
     "xfs"
   ]
-  revision = "282c8707aa210456a825798969cc27edda34992a"
+  revision = "1c7ff3de94ae006f58cba483a4c9c6d7c61e1d98"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b5f4913ed131df3a976a1717d853eef781e418f1cc34950bf04e07a2515f9897"
+  inputs-digest = "82ed8ea15c34c6260b0025606db69eb1fbc58f152a1daf51cdf329f773e85066"
   solver-name = "gps-cdcl"
   solver-version = 1
