@@ -106,7 +106,7 @@ func TestUpdateInstance(t *testing.T) {
 			reg.MustRegister(osbMetrics)
 
 			api := &rest.APISurface{
-				BusinessLogic: &FakeBusinessLogic{
+				Broker: &FakeBroker{
 					validateAPIVersion: validateFunc,
 					update:             tc.updateFunc,
 				},

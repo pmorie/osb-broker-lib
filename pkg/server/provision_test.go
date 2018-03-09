@@ -34,7 +34,7 @@ func TestProvision(t *testing.T) {
 			},
 		},
 		{
-			name: "provision returns errors.New",
+			name: "returns errors.New",
 			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error) {
 				return nil, errors.New("oops")
 			},
@@ -44,7 +44,7 @@ func TestProvision(t *testing.T) {
 			},
 		},
 		{
-			name: "provision returns osb.HTTPStatusCodeError",
+			name: "returns osb.HTTPStatusCodeError",
 			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error) {
 				return nil, osb.HTTPStatusCodeError{
 					StatusCode:  http.StatusBadGateway,
@@ -57,7 +57,7 @@ func TestProvision(t *testing.T) {
 			},
 		},
 		{
-			name: "provision returns sync",
+			name: "returns sync",
 			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error) {
 				return &osb.ProvisionResponse{
 					DashboardURL: strPtr("my.service.to/12345"),
@@ -68,7 +68,7 @@ func TestProvision(t *testing.T) {
 			},
 		},
 		{
-			name: "provision returns async",
+			name: "returns async",
 			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error) {
 				return &osb.ProvisionResponse{
 					Async:        true,
@@ -81,7 +81,7 @@ func TestProvision(t *testing.T) {
 			},
 		},
 		{
-			name: "provision check originating origin identity is passed",
+			name: "check originating origin identity is passed",
 			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error) {
 				if req.OriginatingIdentity != nil {
 
@@ -112,10 +112,29 @@ func TestProvision(t *testing.T) {
 			osbMetrics := metrics.New()
 			reg.MustRegister(osbMetrics)
 
+			request := &osb.ProvisionRequest{
+				InstanceID:          "12345",
+				ServiceID:           "12345",
+				PlanID:              "12345",
+				OrganizationGUID:    "12345",
+				SpaceGUID:           "12345",
+				AcceptsIncomplete:   true,
+				OriginatingIdentity: originatingIdentity(),
+			}
+
+			// establish that the request we got was the request we sent
+			provisionFunc := func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error) {
+				if !reflect.DeepEqual(request, req) {
+					t.Errorf("unexpected request; expected %v, got %v", request, req)
+				}
+
+				return tc.provisionFunc(req, c)
+			}
+
 			api := &rest.APISurface{
-				BusinessLogic: &FakeBusinessLogic{
+				Broker: &FakeBroker{
 					validateAPIVersion: validateFunc,
-					provision:          tc.provisionFunc,
+					provision:          provisionFunc,
 				},
 				Metrics: osbMetrics,
 			}
@@ -132,20 +151,7 @@ func TestProvision(t *testing.T) {
 				t.Error(err)
 			}
 
-			o := osb.OriginatingIdentity{
-				Platform: "kubernetes",
-				Value:    `{"username":"test", "groups": [], "extra": {}}`,
-			}
-
-			actualResponse, err := client.ProvisionInstance(&osb.ProvisionRequest{
-				InstanceID:          "12345",
-				ServiceID:           "12345",
-				PlanID:              "12345",
-				OrganizationGUID:    "12345",
-				SpaceGUID:           "12345",
-				AcceptsIncomplete:   true,
-				OriginatingIdentity: &o,
-			})
+			actualResponse, err := client.ProvisionInstance(request)
 			if err != nil {
 				if tc.err != nil {
 					if e, a := tc.err, err; !reflect.DeepEqual(e, a) {
