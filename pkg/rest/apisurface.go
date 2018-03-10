@@ -120,9 +120,12 @@ func unpackProvisionRequest(r *http.Request) (*osb.ProvisionRequest, error) {
 		osbRequest.AcceptsIncomplete = true
 	}
 	identity, err := retrieveOriginatingIdentity(r)
+	// This could be not found because platforms may support the feature
+	// but are not guaranteed to.
 	if err != nil {
-		return nil, err
+		glog.Infof("Unable to retrieve originating identity - %v", err)
 	}
+
 	osbRequest.OriginatingIdentity = identity
 
 	return osbRequest, nil
@@ -180,8 +183,10 @@ func unpackDeprovisionRequest(r *http.Request) (*osb.DeprovisionRequest, error) 
 		osbRequest.AcceptsIncomplete = true
 	}
 	identity, err := retrieveOriginatingIdentity(r)
+	// This could be not found because platforms may support the feature
+	// but are not guaranteed to.
 	if err != nil {
-		return nil, err
+		glog.Infof("Unable to retrieve originating identity - %v", err)
 	}
 	osbRequest.OriginatingIdentity = identity
 
@@ -291,8 +296,10 @@ func unpackBindRequest(r *http.Request) (*osb.BindRequest, error) {
 	osbRequest.InstanceID = vars[osb.VarKeyInstanceID]
 	osbRequest.BindingID = vars[osb.VarKeyBindingID]
 	identity, err := retrieveOriginatingIdentity(r)
+	// This could be not found because platforms may support the feature
+	// but are not guaranteed to.
 	if err != nil {
-		return nil, err
+		glog.Infof("Unable to retrieve originating identity - %v", err)
 	}
 
 	osbRequest.OriginatingIdentity = identity
@@ -341,8 +348,10 @@ func unpackUnbindRequest(r *http.Request) (*osb.UnbindRequest, error) {
 	osbRequest.BindingID = vars[osb.VarKeyBindingID]
 
 	identity, err := retrieveOriginatingIdentity(r)
+	// This could be not found because platforms may support the feature
+	// but are not guaranteed to.
 	if err != nil {
-		return nil, err
+		glog.Infof("Unable to retrieve originating identity - %v", err)
 	}
 	osbRequest.OriginatingIdentity = identity
 
@@ -399,8 +408,10 @@ func unpackUpdateRequest(r *http.Request) (*osb.UpdateInstanceRequest, error) {
 	}
 
 	identity, err := retrieveOriginatingIdentity(r)
+	// This could be not found because platforms may support the feature
+	// but are not guaranteed to.
 	if err != nil {
-		return nil, err
+		glog.Infof("Unable to retrieve originating identity - %v", err)
 	}
 	osbRequest.OriginatingIdentity = identity
 
