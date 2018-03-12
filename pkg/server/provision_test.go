@@ -19,8 +19,8 @@ func TestProvision(t *testing.T) {
 	cases := []struct {
 		name          string
 		validateFunc  func(string) error
-		provisionFunc func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error)
-		response      *osb.ProvisionResponse
+		provisionFunc func(req *osb.ProvisionRequest, c *broker.RequestContext) (*broker.ProvisionResponse, error)
+		response      *broker.ProvisionResponse
 		err           error
 	}{
 		{
@@ -35,7 +35,7 @@ func TestProvision(t *testing.T) {
 		},
 		{
 			name: "returns errors.New",
-			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error) {
+			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*broker.ProvisionResponse, error) {
 				return nil, errors.New("oops")
 			},
 			err: osb.HTTPStatusCodeError{
@@ -45,7 +45,7 @@ func TestProvision(t *testing.T) {
 		},
 		{
 			name: "returns osb.HTTPStatusCodeError",
-			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error) {
+			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*broker.ProvisionResponse, error) {
 				return nil, osb.HTTPStatusCodeError{
 					StatusCode:  http.StatusBadGateway,
 					Description: strPtr("custom error"),
@@ -58,44 +58,50 @@ func TestProvision(t *testing.T) {
 		},
 		{
 			name: "returns sync",
-			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error) {
-				return &osb.ProvisionResponse{
+			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*broker.ProvisionResponse, error) {
+				return &broker.ProvisionResponse{
+					ProvisionResponse: osb.ProvisionResponse{
+						DashboardURL: strPtr("my.service.to/12345"),
+					}}, nil
+			},
+			response: &broker.ProvisionResponse{
+				ProvisionResponse: osb.ProvisionResponse{
 					DashboardURL: strPtr("my.service.to/12345"),
-				}, nil
-			},
-			response: &osb.ProvisionResponse{
-				DashboardURL: strPtr("my.service.to/12345"),
-			},
+				}},
 		},
 		{
 			name: "returns async",
-			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error) {
-				return &osb.ProvisionResponse{
+			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*broker.ProvisionResponse, error) {
+				return &broker.ProvisionResponse{
+					ProvisionResponse: osb.ProvisionResponse{
+						Async:        true,
+						DashboardURL: strPtr("my.service.to/12345"),
+					}}, nil
+			},
+			response: &broker.ProvisionResponse{
+				ProvisionResponse: osb.ProvisionResponse{
 					Async:        true,
 					DashboardURL: strPtr("my.service.to/12345"),
-				}, nil
-			},
-			response: &osb.ProvisionResponse{
-				Async:        true,
-				DashboardURL: strPtr("my.service.to/12345"),
-			},
+				}},
 		},
 		{
 			name: "check originating origin identity is passed",
-			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error) {
+			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*broker.ProvisionResponse, error) {
 				if req.OriginatingIdentity != nil {
 
-					return &osb.ProvisionResponse{
-						Async:        true,
-						DashboardURL: strPtr("my.service.to/12345"),
-					}, nil
+					return &broker.ProvisionResponse{
+						ProvisionResponse: osb.ProvisionResponse{
+							Async:        true,
+							DashboardURL: strPtr("my.service.to/12345"),
+						}}, nil
 				}
 				return nil, errors.New("oops")
 			},
-			response: &osb.ProvisionResponse{
-				Async:        true,
-				DashboardURL: strPtr("my.service.to/12345"),
-			},
+			response: &broker.ProvisionResponse{
+				ProvisionResponse: osb.ProvisionResponse{
+					Async:        true,
+					DashboardURL: strPtr("my.service.to/12345"),
+				}},
 		},
 	}
 
@@ -123,7 +129,7 @@ func TestProvision(t *testing.T) {
 			}
 
 			// establish that the request we got was the request we sent
-			provisionFunc := func(req *osb.ProvisionRequest, c *broker.RequestContext) (*osb.ProvisionResponse, error) {
+			provisionFunc := func(req *osb.ProvisionRequest, c *broker.RequestContext) (*broker.ProvisionResponse, error) {
 				if !reflect.DeepEqual(request, req) {
 					t.Errorf("unexpected request; expected %v, got %v", request, req)
 				}
@@ -164,7 +170,7 @@ func TestProvision(t *testing.T) {
 				return
 			}
 
-			if e, a := tc.response, actualResponse; !reflect.DeepEqual(e, a) {
+			if e, a := &tc.response.ProvisionResponse, actualResponse; !reflect.DeepEqual(e, a) {
 				t.Errorf("Unexpected response\n\nExpected: %#+v\n\nGot: %#+v", e, a)
 			}
 		})

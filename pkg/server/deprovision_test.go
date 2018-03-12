@@ -20,8 +20,8 @@ func TestDeprovision(t *testing.T) {
 	cases := []struct {
 		name            string
 		validateFunc    func(string) error
-		deprovisionFunc func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*osb.DeprovisionResponse, error)
-		response        *osb.DeprovisionResponse
+		deprovisionFunc func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*broker.DeprovisionResponse, error)
+		response        *broker.DeprovisionResponse
 		err             error
 	}{
 		{
@@ -36,7 +36,7 @@ func TestDeprovision(t *testing.T) {
 		},
 		{
 			name: "returns errors.New",
-			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*osb.DeprovisionResponse, error) {
+			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*broker.DeprovisionResponse, error) {
 				return nil, errors.New("oops")
 			},
 			err: osb.HTTPStatusCodeError{
@@ -46,17 +46,17 @@ func TestDeprovision(t *testing.T) {
 		},
 		{
 			name: "validate incoming parameters",
-			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*osb.DeprovisionResponse, error) {
+			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*broker.DeprovisionResponse, error) {
 				if req.PlanID == "" {
 					return nil, errors.New("deprovision request missing plan_id query parameter")
 				}
-				return &osb.DeprovisionResponse{}, nil
+				return &broker.DeprovisionResponse{}, nil
 			},
-			response: &osb.DeprovisionResponse{},
+			response: &broker.DeprovisionResponse{},
 		},
 		{
 			name: "returns osb.HTTPStatusCodeError",
-			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*osb.DeprovisionResponse, error) {
+			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*broker.DeprovisionResponse, error) {
 				return nil, osb.HTTPStatusCodeError{
 					StatusCode:  http.StatusBadGateway,
 					Description: strPtr("custom error"),
@@ -69,34 +69,42 @@ func TestDeprovision(t *testing.T) {
 		},
 		{
 			name: "returns sync",
-			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*osb.DeprovisionResponse, error) {
-				return &osb.DeprovisionResponse{}, nil
+			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*broker.DeprovisionResponse, error) {
+				return &broker.DeprovisionResponse{}, nil
 			},
-			response: &osb.DeprovisionResponse{},
+			response: &broker.DeprovisionResponse{},
 		},
 		{
 			name: "returns async",
-			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*osb.DeprovisionResponse, error) {
-				return &osb.DeprovisionResponse{
-					Async: true,
+			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*broker.DeprovisionResponse, error) {
+				return &broker.DeprovisionResponse{
+					DeprovisionResponse: osb.DeprovisionResponse{
+						Async: true,
+					},
 				}, nil
 			},
-			response: &osb.DeprovisionResponse{
-				Async: true,
+			response: &broker.DeprovisionResponse{
+				DeprovisionResponse: osb.DeprovisionResponse{
+					Async: true,
+				},
 			},
 		},
 		{
 			name: "check originating origin identity is passed",
-			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*osb.DeprovisionResponse, error) {
+			deprovisionFunc: func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*broker.DeprovisionResponse, error) {
 				if req.OriginatingIdentity != nil {
-					return &osb.DeprovisionResponse{
-						Async: true,
+					return &broker.DeprovisionResponse{
+						DeprovisionResponse: osb.DeprovisionResponse{
+							Async: true,
+						},
 					}, nil
 				}
 				return nil, fmt.Errorf("ops")
 			},
-			response: &osb.DeprovisionResponse{
-				Async: true,
+			response: &broker.DeprovisionResponse{
+				DeprovisionResponse: osb.DeprovisionResponse{
+					Async: true,
+				},
 			},
 		},
 	}
@@ -123,7 +131,7 @@ func TestDeprovision(t *testing.T) {
 			}
 
 			// establish that the request we got was the request we sent
-			deprovisionFunc := func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*osb.DeprovisionResponse, error) {
+			deprovisionFunc := func(req *osb.DeprovisionRequest, c *broker.RequestContext) (*broker.DeprovisionResponse, error) {
 				if !reflect.DeepEqual(request, req) {
 					t.Errorf("unexpected request; expected %v, got %v", request, req)
 				}
@@ -164,7 +172,7 @@ func TestDeprovision(t *testing.T) {
 				return
 			}
 
-			if e, a := tc.response, actualResponse; !reflect.DeepEqual(e, a) {
+			if e, a := &tc.response.DeprovisionResponse, actualResponse; !reflect.DeepEqual(e, a) {
 				t.Errorf("Unexpected response\n\nExpected: %#+v\n\nGot: %#+v", e, a)
 			}
 		})

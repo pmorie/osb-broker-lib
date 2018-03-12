@@ -20,7 +20,7 @@ func TestUpdateInstance(t *testing.T) {
 	cases := []struct {
 		name         string
 		validateFunc func(string) error
-		updateFunc   func(req *osb.UpdateInstanceRequest, c *broker.RequestContext) (*osb.UpdateInstanceResponse, error)
+		updateFunc   func(req *osb.UpdateInstanceRequest, c *broker.RequestContext) (*broker.UpdateInstanceResponse, error)
 		response     *osb.UpdateInstanceResponse
 		err          error
 	}{
@@ -36,7 +36,7 @@ func TestUpdateInstance(t *testing.T) {
 		},
 		{
 			name: "update returns errors.New",
-			updateFunc: func(req *osb.UpdateInstanceRequest, c *broker.RequestContext) (*osb.UpdateInstanceResponse, error) {
+			updateFunc: func(req *osb.UpdateInstanceRequest, c *broker.RequestContext) (*broker.UpdateInstanceResponse, error) {
 				return nil, errors.New("oops")
 			},
 			err: osb.HTTPStatusCodeError{
@@ -46,7 +46,7 @@ func TestUpdateInstance(t *testing.T) {
 		},
 		{
 			name: "update returns osb.HTTPStatusCodeError",
-			updateFunc: func(req *osb.UpdateInstanceRequest, c *broker.RequestContext) (*osb.UpdateInstanceResponse, error) {
+			updateFunc: func(req *osb.UpdateInstanceRequest, c *broker.RequestContext) (*broker.UpdateInstanceResponse, error) {
 				return nil, osb.HTTPStatusCodeError{
 					StatusCode:  http.StatusBadGateway,
 					Description: strPtr("custom error"),
@@ -59,17 +59,18 @@ func TestUpdateInstance(t *testing.T) {
 		},
 		{
 			name: "update returns sync",
-			updateFunc: func(req *osb.UpdateInstanceRequest, c *broker.RequestContext) (*osb.UpdateInstanceResponse, error) {
-				return &osb.UpdateInstanceResponse{}, nil
+			updateFunc: func(req *osb.UpdateInstanceRequest, c *broker.RequestContext) (*broker.UpdateInstanceResponse, error) {
+				return &broker.UpdateInstanceResponse{}, nil
 			},
 			response: &osb.UpdateInstanceResponse{},
 		},
 		{
 			name: "update returns async",
-			updateFunc: func(req *osb.UpdateInstanceRequest, c *broker.RequestContext) (*osb.UpdateInstanceResponse, error) {
-				return &osb.UpdateInstanceResponse{
-					Async: true,
-				}, nil
+			updateFunc: func(req *osb.UpdateInstanceRequest, c *broker.RequestContext) (*broker.UpdateInstanceResponse, error) {
+				return &broker.UpdateInstanceResponse{
+					UpdateInstanceResponse: osb.UpdateInstanceResponse{
+						Async: true,
+					}}, nil
 			},
 			response: &osb.UpdateInstanceResponse{
 				Async: true,
@@ -77,12 +78,13 @@ func TestUpdateInstance(t *testing.T) {
 		},
 		{
 			name: "update check originating origin identity is passed",
-			updateFunc: func(req *osb.UpdateInstanceRequest, c *broker.RequestContext) (*osb.UpdateInstanceResponse, error) {
+			updateFunc: func(req *osb.UpdateInstanceRequest, c *broker.RequestContext) (*broker.UpdateInstanceResponse, error) {
 				if req.OriginatingIdentity != nil {
 
-					return &osb.UpdateInstanceResponse{
-						Async: true,
-					}, nil
+					return &broker.UpdateInstanceResponse{
+						UpdateInstanceResponse: osb.UpdateInstanceResponse{
+							Async: true,
+						}}, nil
 				}
 				return nil, fmt.Errorf("oops")
 			},

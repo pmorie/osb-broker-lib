@@ -16,22 +16,24 @@ import (
 )
 
 func TestGetCatalog(t *testing.T) {
-	okResponse := &osb.CatalogResponse{Services: []osb.Service{
-		{
-			Name: "foo",
-		},
-	}}
+	okResponse := &broker.CatalogResponse{
+		CatalogResponse: osb.CatalogResponse{
+			Services: []osb.Service{
+				{
+					Name: "foo",
+				},
+			}}}
 
 	cases := []struct {
 		name         string
 		validateFunc func(string) error
-		catalogFunc  func(c *broker.RequestContext) (*osb.CatalogResponse, error)
-		response     *osb.CatalogResponse
+		catalogFunc  func(c *broker.RequestContext) (*broker.CatalogResponse, error)
+		response     *broker.CatalogResponse
 		err          error
 	}{
 		{
 			name: "OK",
-			catalogFunc: func(c *broker.RequestContext) (*osb.CatalogResponse, error) {
+			catalogFunc: func(c *broker.RequestContext) (*broker.CatalogResponse, error) {
 				return okResponse, nil
 			},
 			response: okResponse,
@@ -93,8 +95,7 @@ func TestGetCatalog(t *testing.T) {
 				t.Error(err)
 				return
 			}
-
-			if e, a := tc.response, actualResponse; !reflect.DeepEqual(e, a) {
+			if e, a := &tc.response.CatalogResponse, actualResponse; !reflect.DeepEqual(e, a) {
 				t.Errorf("Unexpected response\n\nExpected: %#+v\n\nGot: %#+v", e, a)
 			}
 		})
