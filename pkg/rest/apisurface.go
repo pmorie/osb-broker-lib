@@ -99,9 +99,20 @@ func (s *APISurface) ProvisionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status := http.StatusOK
+	// MUST be returned if the Service Instance was provisioned
+	// as a result of this request and Not async
+	status := http.StatusCreated
+
+	// MUST be returned if the Service Instance provisioning is in progress.
 	if response.Async {
 		status = http.StatusAccepted
+	}
+
+	if response.Exists {
+		// MUST be returned if the Service Instance already exists,
+		// is fully provisioned, and the requested parameters
+		// are identical to the existing Service Instance
+		status = http.StatusOK
 	}
 
 	s.writeResponse(w, status, response)
@@ -288,8 +299,12 @@ func (s *APISurface) BindHandler(w http.ResponseWriter, r *http.Request) {
 		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
+	status := http.StatusCreated
+	if response.Exists {
+		status = http.StatusOK
+	}
 
-	s.writeResponse(w, http.StatusOK, response)
+	s.writeResponse(w, status, response)
 }
 
 // unpackBindRequest unpacks an osb request from the given HTTP request.

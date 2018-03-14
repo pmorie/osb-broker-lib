@@ -103,6 +103,20 @@ func TestProvision(t *testing.T) {
 					DashboardURL: strPtr("my.service.to/12345"),
 				}},
 		},
+		{
+			name: "returns already completed",
+			provisionFunc: func(req *osb.ProvisionRequest, c *broker.RequestContext) (*broker.ProvisionResponse, error) {
+				return &broker.ProvisionResponse{
+					Exists: true,
+					ProvisionResponse: osb.ProvisionResponse{
+						DashboardURL: strPtr("my.service.to/12345"),
+					}}, nil
+			},
+			response: &broker.ProvisionResponse{
+				ProvisionResponse: osb.ProvisionResponse{
+					DashboardURL: strPtr("my.service.to/12345"),
+				}},
+		},
 	}
 
 	for i := range cases {
