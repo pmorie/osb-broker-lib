@@ -20,7 +20,7 @@ func TestBind(t *testing.T) {
 	cases := []struct {
 		name         string
 		validateFunc func(string) error
-		bindFunc     func(req *osb.BindRequest, c *broker.RequestContext) (*osb.BindResponse, error)
+		bindFunc     func(req *osb.BindRequest, c *broker.RequestContext) (*broker.BindResponse, error)
 		response     *osb.BindResponse
 		err          error
 	}{
@@ -36,7 +36,7 @@ func TestBind(t *testing.T) {
 		},
 		{
 			name: "bind returns errors.New",
-			bindFunc: func(req *osb.BindRequest, c *broker.RequestContext) (*osb.BindResponse, error) {
+			bindFunc: func(req *osb.BindRequest, c *broker.RequestContext) (*broker.BindResponse, error) {
 				return nil, errors.New("oops")
 			},
 			err: osb.HTTPStatusCodeError{
@@ -46,7 +46,7 @@ func TestBind(t *testing.T) {
 		},
 		{
 			name: "bind returns osb.HTTPStatusCodeError",
-			bindFunc: func(req *osb.BindRequest, c *broker.RequestContext) (*osb.BindResponse, error) {
+			bindFunc: func(req *osb.BindRequest, c *broker.RequestContext) (*broker.BindResponse, error) {
 				return nil, osb.HTTPStatusCodeError{
 					StatusCode:  http.StatusBadGateway,
 					Description: strPtr("custom error"),
@@ -59,17 +59,17 @@ func TestBind(t *testing.T) {
 		},
 		{
 			name: "OK",
-			bindFunc: func(req *osb.BindRequest, c *broker.RequestContext) (*osb.BindResponse, error) {
-				return &osb.BindResponse{}, nil
+			bindFunc: func(req *osb.BindRequest, c *broker.RequestContext) (*broker.BindResponse, error) {
+				return &broker.BindResponse{}, nil
 			},
 			response: &osb.BindResponse{},
 		},
 		{
 			name: "bind check originating origin identity is passed",
-			bindFunc: func(req *osb.BindRequest, c *broker.RequestContext) (*osb.BindResponse, error) {
+			bindFunc: func(req *osb.BindRequest, c *broker.RequestContext) (*broker.BindResponse, error) {
 				if req.OriginatingIdentity != nil {
 
-					return &osb.BindResponse{}, nil
+					return &broker.BindResponse{}, nil
 				}
 				return nil, fmt.Errorf("oops")
 			},

@@ -20,8 +20,8 @@ func TestUnbind(t *testing.T) {
 	cases := []struct {
 		name         string
 		validateFunc func(string) error
-		unbindFunc   func(req *osb.UnbindRequest, c *broker.RequestContext) (*osb.UnbindResponse, error)
-		response     *osb.UnbindResponse
+		unbindFunc   func(req *osb.UnbindRequest, c *broker.RequestContext) (*broker.UnbindResponse, error)
+		response     *broker.UnbindResponse
 		err          error
 	}{
 		{
@@ -36,7 +36,7 @@ func TestUnbind(t *testing.T) {
 		},
 		{
 			name: "unbind returns errors.New",
-			unbindFunc: func(req *osb.UnbindRequest, c *broker.RequestContext) (*osb.UnbindResponse, error) {
+			unbindFunc: func(req *osb.UnbindRequest, c *broker.RequestContext) (*broker.UnbindResponse, error) {
 				return nil, errors.New("oops")
 			},
 			err: osb.HTTPStatusCodeError{
@@ -46,7 +46,7 @@ func TestUnbind(t *testing.T) {
 		},
 		{
 			name: "unbind returns osb.HTTPStatusCodeError",
-			unbindFunc: func(req *osb.UnbindRequest, c *broker.RequestContext) (*osb.UnbindResponse, error) {
+			unbindFunc: func(req *osb.UnbindRequest, c *broker.RequestContext) (*broker.UnbindResponse, error) {
 				return nil, osb.HTTPStatusCodeError{
 					StatusCode:  http.StatusBadGateway,
 					Description: strPtr("custom error"),
@@ -59,20 +59,20 @@ func TestUnbind(t *testing.T) {
 		},
 		{
 			name: "OK",
-			unbindFunc: func(req *osb.UnbindRequest, c *broker.RequestContext) (*osb.UnbindResponse, error) {
-				return &osb.UnbindResponse{}, nil
+			unbindFunc: func(req *osb.UnbindRequest, c *broker.RequestContext) (*broker.UnbindResponse, error) {
+				return &broker.UnbindResponse{}, nil
 			},
-			response: &osb.UnbindResponse{},
+			response: &broker.UnbindResponse{},
 		},
 		{
 			name: "unbind check originating origin identity is passed",
-			unbindFunc: func(req *osb.UnbindRequest, c *broker.RequestContext) (*osb.UnbindResponse, error) {
+			unbindFunc: func(req *osb.UnbindRequest, c *broker.RequestContext) (*broker.UnbindResponse, error) {
 				if req.OriginatingIdentity != nil {
-					return &osb.UnbindResponse{}, nil
+					return &broker.UnbindResponse{}, nil
 				}
 				return nil, fmt.Errorf("oops")
 			},
-			response: &osb.UnbindResponse{},
+			response: &broker.UnbindResponse{},
 		},
 	}
 
@@ -132,7 +132,7 @@ func TestUnbind(t *testing.T) {
 				return
 			}
 
-			if e, a := tc.response, actualResponse; !reflect.DeepEqual(e, a) {
+			if e, a := &tc.response.UnbindResponse, actualResponse; !reflect.DeepEqual(e, a) {
 				t.Errorf("Unexpected response\n\nExpected: %#+v\n\nGot: %#+v", e, a)
 			}
 		})

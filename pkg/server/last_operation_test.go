@@ -19,8 +19,8 @@ func TestLastOperation(t *testing.T) {
 	cases := []struct {
 		name         string
 		validateFunc func(string) error
-		lastOpFunc   func(req *osb.LastOperationRequest, c *broker.RequestContext) (*osb.LastOperationResponse, error)
-		response     *osb.LastOperationResponse
+		lastOpFunc   func(req *osb.LastOperationRequest, c *broker.RequestContext) (*broker.LastOperationResponse, error)
+		response     *broker.LastOperationResponse
 		err          error
 	}{
 		{
@@ -35,7 +35,7 @@ func TestLastOperation(t *testing.T) {
 		},
 		{
 			name: "lastOperation returns errors.New",
-			lastOpFunc: func(req *osb.LastOperationRequest, c *broker.RequestContext) (*osb.LastOperationResponse, error) {
+			lastOpFunc: func(req *osb.LastOperationRequest, c *broker.RequestContext) (*broker.LastOperationResponse, error) {
 				return nil, errors.New("oops")
 			},
 			err: osb.HTTPStatusCodeError{
@@ -45,7 +45,7 @@ func TestLastOperation(t *testing.T) {
 		},
 		{
 			name: "lastOperation returns osb.HTTPStatusCodeError",
-			lastOpFunc: func(req *osb.LastOperationRequest, c *broker.RequestContext) (*osb.LastOperationResponse, error) {
+			lastOpFunc: func(req *osb.LastOperationRequest, c *broker.RequestContext) (*broker.LastOperationResponse, error) {
 				return nil, osb.HTTPStatusCodeError{
 					StatusCode:  http.StatusBadGateway,
 					Description: strPtr("custom error"),
@@ -58,13 +58,16 @@ func TestLastOperation(t *testing.T) {
 		},
 		{
 			name: "OK",
-			lastOpFunc: func(req *osb.LastOperationRequest, c *broker.RequestContext) (*osb.LastOperationResponse, error) {
-				return &osb.LastOperationResponse{
-					State: osb.StateSucceeded,
-				}, nil
+			lastOpFunc: func(req *osb.LastOperationRequest, c *broker.RequestContext) (*broker.LastOperationResponse, error) {
+				return &broker.LastOperationResponse{
+					LastOperationResponse: osb.LastOperationResponse{
+						State: osb.StateSucceeded,
+					}}, nil
 			},
-			response: &osb.LastOperationResponse{
-				State: osb.StateSucceeded,
+			response: &broker.LastOperationResponse{
+				LastOperationResponse: osb.LastOperationResponse{
+					State: osb.StateSucceeded,
+				},
 			},
 		},
 	}
@@ -117,7 +120,7 @@ func TestLastOperation(t *testing.T) {
 				return
 			}
 
-			if e, a := tc.response, actualResponse; !reflect.DeepEqual(e, a) {
+			if e, a := &tc.response.LastOperationResponse, actualResponse; !reflect.DeepEqual(e, a) {
 				t.Errorf("Unexpected response\n\nExpected: %#+v\n\nGot: %#+v", e, a)
 			}
 		})
