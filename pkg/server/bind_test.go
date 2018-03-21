@@ -60,6 +60,15 @@ func TestBind(t *testing.T) {
 		{
 			name: "OK",
 			bindFunc: func(req *osb.BindRequest, c *broker.RequestContext) (*broker.BindResponse, error) {
+				return &broker.BindResponse{
+					Exists: true,
+				}, nil
+			},
+			response: &osb.BindResponse{},
+		},
+		{
+			name: "Created",
+			bindFunc: func(req *osb.BindRequest, c *broker.RequestContext) (*broker.BindResponse, error) {
 				return &broker.BindResponse{}, nil
 			},
 			response: &osb.BindResponse{},

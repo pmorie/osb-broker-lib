@@ -10,6 +10,11 @@ type CatalogResponse struct {
 // ProvisionResponse is sent as the response to a provision call.
 type ProvisionResponse struct {
 	osb.ProvisionResponse
+
+	// Exists - is set if the request was already completed
+	// and the requested parameters are identical to the existing
+	// Service Instance.
+	Exists bool `json:"-"`
 }
 
 // UpdateInstanceResponse is sent as the response to a update call.
@@ -30,6 +35,11 @@ type LastOperationResponse struct {
 // BindResponse is sent as the response to a bind call.
 type BindResponse struct {
 	osb.BindResponse
+
+	// Exists - is set if the request was already completed
+	// and the requested parameters are identical to the existing
+	// Service Binding.
+	Exists bool `json:"-"`
 }
 
 // UnbindResponse is sent as the response to a bind call.
