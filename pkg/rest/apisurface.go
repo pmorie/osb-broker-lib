@@ -420,15 +420,17 @@ func (s *APISurface) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 func unpackUpdateRequest(r *http.Request) (*osb.UpdateInstanceRequest, error) {
 	osbRequest := &osb.UpdateInstanceRequest{}
-
-	vars := mux.Vars(r)
-	osbRequest.ServiceID = vars[osb.VarKeyServiceID]
-
-	planID := vars[osb.VarKeyPlanID]
-	if planID != "" {
-		osbRequest.PlanID = &planID
+	if err := unmarshalRequestBody(r, osbRequest); err != nil {
+		return nil, err
 	}
 
+	vars := mux.Vars(r)
+	osbRequest.InstanceID = vars[osb.VarKeyInstanceID]
+
+	asyncQueryParamVal := r.FormValue(osb.AcceptsIncomplete)
+	if strings.ToLower(asyncQueryParamVal) == "true" {
+		osbRequest.AcceptsIncomplete = true
+	}
 	identity, err := retrieveOriginatingIdentity(r)
 	// This could be not found because platforms may support the feature
 	// but are not guaranteed to.
