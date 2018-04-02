@@ -391,7 +391,8 @@ func (s *APISurface) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	request, err := unpackUpdateRequest(r)
+	v := mux.Vars(r)
+	request, err := unpackUpdateRequest(r, v)
 	if err != nil {
 		s.writeError(w, err, http.StatusInternalServerError)
 		return
@@ -418,13 +419,12 @@ func (s *APISurface) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	s.writeResponse(w, status, response)
 }
 
-func unpackUpdateRequest(r *http.Request) (*osb.UpdateInstanceRequest, error) {
+func unpackUpdateRequest(r *http.Request, vars map[string]string) (*osb.UpdateInstanceRequest, error) {
 	osbRequest := &osb.UpdateInstanceRequest{}
 	if err := unmarshalRequestBody(r, osbRequest); err != nil {
 		return nil, err
 	}
 
-	vars := mux.Vars(r)
 	osbRequest.InstanceID = vars[osb.VarKeyInstanceID]
 
 	asyncQueryParamVal := r.FormValue(osb.AcceptsIncomplete)
