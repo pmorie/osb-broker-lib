@@ -86,7 +86,7 @@ func (s *APISurface) ProvisionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	glog.Infof("Received ProvisionRequest for instanceID %q", request.InstanceID)
+	glog.V(4).Infof("Received ProvisionRequest for instanceID %q", request.InstanceID)
 
 	c := &broker.RequestContext{
 		Writer:  w,
@@ -166,7 +166,7 @@ func (s *APISurface) DeprovisionHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	glog.Infof("Received DeprovisionRequest for instanceID %q", request.InstanceID)
+	glog.V(4).Infof("Received DeprovisionRequest for instanceID %q", request.InstanceID)
 
 	c := &broker.RequestContext{
 		Writer:  w,
@@ -230,7 +230,7 @@ func (s *APISurface) LastOperationHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	glog.Infof("Received LastOperationRequest for instanceID %q", request.InstanceID)
+	glog.V(4).Infof("Received LastOperationRequest for instanceID %q", request.InstanceID)
 
 	c := &broker.RequestContext{
 		Writer:  w,
@@ -287,7 +287,7 @@ func (s *APISurface) BindHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	glog.Infof("Received BindRequest for instanceID %q, bindingID %q", request.InstanceID, request.BindingID)
+	glog.V(4).Infof("Received BindRequest for instanceID %q, bindingID %q", request.InstanceID, request.BindingID)
 
 	c := &broker.RequestContext{
 		Writer:  w,
@@ -346,7 +346,7 @@ func (s *APISurface) UnbindHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	glog.Infof("Received UnbindRequest for instanceID %q, bindingID %q", request.InstanceID, request.BindingID)
+	glog.V(4).Infof("Received UnbindRequest for instanceID %q, bindingID %q", request.InstanceID, request.BindingID)
 	c := &broker.RequestContext{
 		Writer:  w,
 		Request: r,
@@ -398,7 +398,7 @@ func (s *APISurface) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	glog.Infof("Received Update Request for instanceID %q", request.InstanceID)
+	glog.V(4).Infof("Received Update Request for instanceID %q", request.InstanceID)
 
 	c := &broker.RequestContext{
 		Writer:  w,
