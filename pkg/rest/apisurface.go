@@ -369,6 +369,11 @@ func unpackUnbindRequest(r *http.Request) (*osb.UnbindRequest, error) {
 	osbRequest.InstanceID = vars[osb.VarKeyInstanceID]
 	osbRequest.BindingID = vars[osb.VarKeyBindingID]
 
+	// plan_id and service_id are set in the query string parameters and thus need to
+	// be obtained differently than instance_id and binding_id.
+	osbRequest.PlanID = r.FormValue(osb.VarKeyPlanID)
+	osbRequest.ServiceID = r.FormValue(osb.VarKeyServiceID)
+
 	identity, err := retrieveOriginatingIdentity(r)
 	// This could be not found because platforms may support the feature
 	// but are not guaranteed to.
