@@ -62,3 +62,42 @@ func createFakeUpdateRequest(s, p string, a bool) *http.Request {
 
 	return httptest.NewRequest("PATCH", uri, r)
 }
+
+func TestUnpackUnbindRequest(t *testing.T) {
+	instanceID := "i1234"
+	serviceID := "s1234"
+	planID := "p1234"
+	bindingID := "b1234"
+
+	fakeUnbindReq := createFakeUnbindRequest(serviceID, planID, instanceID, bindingID)
+	unpackReq, err := unpackUnbindRequest(fakeUnbindReq, map[string]string{
+		"instance_id": instanceID,
+		"binding_id":  bindingID,
+	})
+	if err != nil {
+		t.Fatalf("Unpacking unbind request: %v", err)
+	}
+
+	if unpackReq.InstanceID != instanceID {
+		t.Fatalf("InstanceID was unpacked unsuccessfully. Expecting %s got %s", instanceID, unpackReq.InstanceID)
+	}
+
+	if unpackReq.ServiceID != serviceID {
+		t.Fatalf("ServiceID was unpacked unsuccessfully. Expecting %s got %s", serviceID, unpackReq.ServiceID)
+	}
+
+	if unpackReq.PlanID != planID {
+		t.Fatalf("PlanID was unpacked unsuccessfully. Expecting %s got %s", planID, unpackReq.PlanID)
+	}
+
+	if unpackReq.BindingID != bindingID {
+		t.Fatalf("BindingID was unpacked unsuccessfully. Expecting %s got %s", bindingID, unpackReq.BindingID)
+	}
+}
+
+func createFakeUnbindRequest(s, p, i, b string) *http.Request {
+	body := bytes.NewBufferString("")
+	uri := fmt.Sprintf("/v2/service_instances/%s/service_bindings/%s?plan_id=%s&service_id=%s", i, b, p, s)
+
+	return httptest.NewRequest("DELETE", uri, body)
+}
