@@ -299,9 +299,20 @@ func (s *APISurface) BindHandler(w http.ResponseWriter, r *http.Request) {
 		s.writeError(w, err, http.StatusInternalServerError)
 		return
 	}
+
+	// MUST be returned if the binding was created as a result of this request.
 	status := http.StatusCreated
+
 	if response.Exists {
+		// MUST be returned if the binding already exists and the requested parameters
+		// are identical to the existing binding.
 		status = http.StatusOK
+	} else if response.Async {
+		// MUST be returned if the binding is in progress. NOTE: Async bindings
+		// are an alpha level feature currently in the "validating through
+		// implementation phase" of the OSB spec. See:
+		// https://github.com/openservicebrokerapi/servicebroker/pull/334
+		status = http.StatusAccepted
 	}
 
 	s.writeResponse(w, status, response)
