@@ -329,6 +329,119 @@ func unpackBindRequest(r *http.Request) (*osb.BindRequest, error) {
 	return osbRequest, nil
 }
 
+// GetBindingHandler is the mux handler that dispatches get binding requests to
+// the broker's Interface.
+func (s *APISurface) GetBindingHandler(w http.ResponseWriter, r *http.Request) {
+	s.Metrics.Actions.WithLabelValues("get_binding").Inc()
+
+	version := getBrokerAPIVersionFromRequest(r)
+	if err := s.Broker.ValidateBrokerAPIVersion(version); err != nil {
+		s.writeError(w, err, http.StatusPreconditionFailed)
+		return
+	}
+
+	vars := mux.Vars(r)
+	request, err := unpackGetBindingRequest(r, vars)
+	if err != nil {
+		s.writeError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	glog.Infof("Received GetBinding request for instanceID %q, bindingID %q", request.InstanceID, request.BindingID)
+
+	c := &broker.RequestContext{
+		Writer:  w,
+		Request: r,
+	}
+
+	response, err := s.Broker.GetBinding(request, c)
+	if err != nil {
+		s.writeError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	s.writeResponse(w, http.StatusOK, response)
+}
+
+// unpackGetBindingRequest unpacks an osb get binding request from the given
+// HTTP request.
+func unpackGetBindingRequest(r *http.Request, vars map[string]string) (*osb.GetBindingRequest, error) {
+	request := &osb.GetBindingRequest{}
+
+	request.InstanceID = vars[osb.VarKeyInstanceID]
+	request.BindingID = vars[osb.VarKeyBindingID]
+
+	return request, nil
+}
+
+// GetBindingLastOperation is the mux handler that dispatches binding last
+// operation requests to the broker's Interface.
+func (s *APISurface) BindingLastOperationHandler(w http.ResponseWriter, r *http.Request) {
+	s.Metrics.Actions.WithLabelValues("binding_last_operation").Inc()
+
+	version := getBrokerAPIVersionFromRequest(r)
+	if err := s.Broker.ValidateBrokerAPIVersion(version); err != nil {
+		s.writeError(w, err, http.StatusPreconditionFailed)
+		return
+	}
+
+	vars := mux.Vars(r)
+	request, err := unpackBindingLastOperationRequest(r, vars)
+	if err != nil {
+		s.writeError(w, err, http.StatusBadRequest)
+		return
+	}
+
+	glog.Infof("Received BindingLastOperationRequest for instanceID %q, bindingID %q", request.InstanceID, request.BindingID)
+
+	c := &broker.RequestContext{
+		Writer:  w,
+		Request: r,
+	}
+
+	response, err := s.Broker.BindingLastOperation(request, c)
+	if err != nil {
+		s.writeError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	s.writeResponse(w, http.StatusOK, response)
+}
+
+// unpackBindingLastOperationRequest unpacks an osb binding last operation
+// request from the given HTTP request.
+func unpackBindingLastOperationRequest(
+	r *http.Request, vars map[string]string,
+) (*osb.BindingLastOperationRequest, error) {
+	request := &osb.BindingLastOperationRequest{}
+	request.InstanceID = vars[osb.VarKeyInstanceID]
+	request.BindingID = vars[osb.VarKeyBindingID]
+
+	serviceID := vars[osb.VarKeyServiceID]
+	if serviceID != "" {
+		request.ServiceID = &serviceID
+	}
+
+	planID := vars[osb.VarKeyPlanID]
+	if planID != "" {
+		request.PlanID = &planID
+	}
+
+	operation := vars[osb.VarKeyOperation]
+	if operation != "" {
+		typedOperation := osb.OperationKey(operation)
+		request.OperationKey = &typedOperation
+	}
+
+	identity, err := retrieveOriginatingIdentity(r)
+	if err != nil {
+		return nil, err
+	}
+	request.OriginatingIdentity = identity
+
+	return request, nil
+}
+
 // UnbindHandler is the mux handler that dispatches unbind requests to the
 // broker's Interface.
 func (s *APISurface) UnbindHandler(w http.ResponseWriter, r *http.Request) {
@@ -451,6 +564,7 @@ func unpackUpdateRequest(r *http.Request, vars map[string]string) (*osb.UpdateIn
 // the request header.
 func retrieveOriginatingIdentity(r *http.Request) (*osb.OriginatingIdentity, error) {
 	identityHeader := r.Header.Get(osb.OriginatingIdentityHeader)
+
 	if identityHeader != "" {
 		identitySlice := strings.Split(identityHeader, " ")
 		if len(identitySlice) != 2 {

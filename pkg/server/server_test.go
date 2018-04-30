@@ -18,14 +18,16 @@ import (
 
 // FakeBroker provides an implementation of the broker.Interface.
 type FakeBroker struct {
-	validateAPIVersion func(string) error
-	getCatalog         func(c *broker.RequestContext) (*broker.CatalogResponse, error)
-	provision          func(pr *osb.ProvisionRequest, c *broker.RequestContext) (*broker.ProvisionResponse, error)
-	deprovision        func(request *osb.DeprovisionRequest, c *broker.RequestContext) (*broker.DeprovisionResponse, error)
-	lastOperation      func(request *osb.LastOperationRequest, c *broker.RequestContext) (*broker.LastOperationResponse, error)
-	bind               func(request *osb.BindRequest, c *broker.RequestContext) (*broker.BindResponse, error)
-	unbind             func(request *osb.UnbindRequest, c *broker.RequestContext) (*broker.UnbindResponse, error)
-	update             func(request *osb.UpdateInstanceRequest, c *broker.RequestContext) (*broker.UpdateInstanceResponse, error)
+	validateAPIVersion   func(string) error
+	getCatalog           func(c *broker.RequestContext) (*broker.CatalogResponse, error)
+	provision            func(pr *osb.ProvisionRequest, c *broker.RequestContext) (*broker.ProvisionResponse, error)
+	deprovision          func(request *osb.DeprovisionRequest, c *broker.RequestContext) (*broker.DeprovisionResponse, error)
+	lastOperation        func(request *osb.LastOperationRequest, c *broker.RequestContext) (*broker.LastOperationResponse, error)
+	bind                 func(request *osb.BindRequest, c *broker.RequestContext) (*broker.BindResponse, error)
+	unbind               func(request *osb.UnbindRequest, c *broker.RequestContext) (*broker.UnbindResponse, error)
+	update               func(request *osb.UpdateInstanceRequest, c *broker.RequestContext) (*broker.UpdateInstanceResponse, error)
+	getBinding           func(request *osb.GetBindingRequest, c *broker.RequestContext) (*broker.GetBindingResponse, error)
+	bindingLastOperation func(request *osb.BindingLastOperationRequest, c *broker.RequestContext) (*broker.LastOperationResponse, error)
 }
 
 var _ broker.Interface = &FakeBroker{}
@@ -62,6 +64,14 @@ func (b *FakeBroker) Update(request *osb.UpdateInstanceRequest, c *broker.Reques
 	return b.update(request, c)
 }
 
+func (b *FakeBroker) GetBinding(request *osb.GetBindingRequest, c *broker.RequestContext) (*broker.GetBindingResponse, error) {
+	return b.getBinding(request, c)
+}
+
+func (b *FakeBroker) BindingLastOperation(request *osb.BindingLastOperationRequest, c *broker.RequestContext) (*broker.LastOperationResponse, error) {
+	return b.bindingLastOperation(request, c)
+}
+
 func defaultValidateFunc(_ string) error {
 	return nil
 }
@@ -86,10 +96,11 @@ func originatingIdentity() *osb.OriginatingIdentity {
 
 func TestNewHTTPHandler(t *testing.T) {
 	type args struct {
-		broker        broker.Interface
-		servicePath   string
-		serviceMethod string
-		request       []byte
+		broker              broker.Interface
+		servicePath         string
+		serviceMethod       string
+		request             []byte
+		originatingIdentity string
 	}
 	tests := []struct {
 		name           string
@@ -200,6 +211,37 @@ func TestNewHTTPHandler(t *testing.T) {
 			wantStatusCode: 201,
 		},
 		{
+			name: "test APISurface GetBinding(...)",
+			args: args{
+				broker: &fakeBroker{
+					validateBrokerAPIVersion: func(version string) error { return nil },
+					getBinding: func(request *osb.GetBindingRequest, c *broker.RequestContext) (*broker.GetBindingResponse, error) {
+						return &broker.GetBindingResponse{}, nil
+					},
+				},
+				servicePath:   "/v2/service_instances/foo/service_bindings/bar",
+				serviceMethod: http.MethodGet,
+				request:       []byte("{}"),
+			},
+			wantStatusCode: 200,
+		},
+		{
+			name: "test APISurface BindingLastOperation(...)",
+			args: args{
+				broker: &fakeBroker{
+					validateBrokerAPIVersion: func(version string) error { return nil },
+					bindingLastOperation: func(request *osb.BindingLastOperationRequest, c *broker.RequestContext) (*broker.LastOperationResponse, error) {
+						return &broker.LastOperationResponse{}, nil
+					},
+				},
+				servicePath:         "/v2/service_instances/foo/service_bindings/bar/last_operation",
+				serviceMethod:       http.MethodGet,
+				request:             []byte("{}"),
+				originatingIdentity: "kubernetes ZHVkZXI=",
+			},
+			wantStatusCode: 200,
+		},
+		{
 			name: "test APISurface Unbind(...)",
 			args: args{
 				broker: &fakeBroker{
@@ -228,6 +270,9 @@ func TestNewHTTPHandler(t *testing.T) {
 			u.Path = path.Join(u.Path, tt.args.servicePath)
 			client := http.DefaultClient
 			req, err := http.NewRequest(tt.args.serviceMethod, u.String(), bytes.NewReader(tt.args.request))
+			if tt.args.originatingIdentity != "" {
+				req.Header.Set(osb.OriginatingIdentityHeader, tt.args.originatingIdentity)
+			}
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -252,6 +297,8 @@ type fakeBroker struct {
 	bind                     func(request *osb.BindRequest, c *broker.RequestContext) (*broker.BindResponse, error)
 	unbind                   func(request *osb.UnbindRequest, c *broker.RequestContext) (*broker.UnbindResponse, error)
 	update                   func(request *osb.UpdateInstanceRequest, c *broker.RequestContext) (*broker.UpdateInstanceResponse, error)
+	getBinding               func(request *osb.GetBindingRequest, c *broker.RequestContext) (*broker.GetBindingResponse, error)
+	bindingLastOperation     func(request *osb.BindingLastOperationRequest, c *broker.RequestContext) (*broker.LastOperationResponse, error)
 }
 
 var _ broker.Interface = &fakeBroker{}
@@ -273,6 +320,12 @@ func (b *fakeBroker) LastOperation(request *osb.LastOperationRequest, c *broker.
 }
 func (b *fakeBroker) Bind(request *osb.BindRequest, c *broker.RequestContext) (*broker.BindResponse, error) {
 	return b.bind(request, c)
+}
+func (b *fakeBroker) GetBinding(request *osb.GetBindingRequest, c *broker.RequestContext) (*broker.GetBindingResponse, error) {
+	return b.getBinding(request, c)
+}
+func (b *fakeBroker) BindingLastOperation(request *osb.BindingLastOperationRequest, c *broker.RequestContext) (*broker.LastOperationResponse, error) {
+	return b.bindingLastOperation(request, c)
 }
 func (b *fakeBroker) Unbind(request *osb.UnbindRequest, c *broker.RequestContext) (*broker.UnbindResponse, error) {
 	return b.unbind(request, c)
