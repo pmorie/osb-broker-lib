@@ -280,3 +280,13 @@ func (b *fakeBroker) Unbind(request *osb.UnbindRequest, c *broker.RequestContext
 func (b *fakeBroker) Update(request *osb.UpdateInstanceRequest, c *broker.RequestContext) (*broker.UpdateInstanceResponse, error) {
 	return b.update(request, c)
 }
+
+type FakeBrokerWithReadiness struct {
+	FakeBroker
+	readinessFunc func(http.ResponseWriter, *http.Request)
+}
+
+func (f FakeBrokerWithReadiness) Readiness(w http.ResponseWriter, r *http.Request) {
+	f.readinessFunc(w, r)
+	return
+}

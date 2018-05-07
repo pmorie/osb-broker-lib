@@ -170,3 +170,9 @@ type RequestContext struct {
 	Writer  http.ResponseWriter
 	Request *http.Request
 }
+
+// HasReadiness interface will be used to determine if the broker has declared
+// a readiness check. If so the api surface will automatically add a path to /readiness
+type HasReadiness interface {
+	Readiness(w http.ResponseWriter, r *http.Request)
+}

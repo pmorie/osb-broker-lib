@@ -12,6 +12,7 @@ import (
 	prom "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/pmorie/osb-broker-lib/pkg/broker"
 	"github.com/pmorie/osb-broker-lib/pkg/rest"
 )
 
@@ -36,6 +37,9 @@ func New(api *rest.APISurface, reg prom.Gatherer) *Server {
 
 	registerAPIHandlers(router, api)
 	router.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
+	if r, ok := api.Broker.(broker.HasReadiness); ok {
+		router.HandleFunc("/readiness", r.Readiness).Methods("GET")
+	}
 
 	return &Server{
 		Router: router,
