@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/abbot/go-http-auth"
+  packages = ["."]
+  revision = "0ddd408d5d60ea76e320503cc7dd091992dee608"
+  version = "v0.4.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/beorn7/perks"
   packages = ["quantile"]
@@ -40,8 +46,18 @@
 [[projects]]
   name = "github.com/pmorie/go-open-service-broker-client"
   packages = ["v2"]
-  revision = "e8aa16c9036317bd59ced8921e9da6197ab577e3"
-  version = "0.0.5"
+  revision = "dca737037ce636eb282e84e3a1c7479c9692e884"
+  version = "0.0.10"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/pmorie/osb-broker-lib"
+  packages = [
+    "pkg/broker",
+    "pkg/metrics",
+    "pkg/rest"
+  ]
+  revision = "87d71cfbf3427836e5623f1e3843a466348b7be6"
 
 [[projects]]
   name = "github.com/prometheus/client_golang"
@@ -79,9 +95,24 @@
   ]
   revision = "282c8707aa210456a825798969cc27edda34992a"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/crypto"
+  packages = [
+    "bcrypt",
+    "blowfish"
+  ]
+  revision = "de0752318171da717af4ce24d0a2e8626afaeb11"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/net"
+  packages = ["context"]
+  revision = "c39426892332e1bb5ec0a434a079bf82f5d30c54"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "82ed8ea15c34c6260b0025606db69eb1fbc58f152a1daf51cdf329f773e85066"
+  inputs-digest = "29c719b711a659af66718064f7759da56e9cfe255b039db165bc1a54b4c06b8e"
   solver-name = "gps-cdcl"
   solver-version = 1
