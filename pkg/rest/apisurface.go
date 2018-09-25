@@ -254,15 +254,17 @@ func unpackLastOperationRequest(r *http.Request) (*osb.LastOperationRequest, err
 
 	vars := mux.Vars(r)
 	osbRequest.InstanceID = vars[osb.VarKeyInstanceID]
-	serviceID := vars[osb.VarKeyServiceID]
+
+	q := r.URL.Query()
+	serviceID := q.Get(osb.VarKeyServiceID)
 	if serviceID != "" {
 		osbRequest.ServiceID = &serviceID
 	}
-	planID := vars[osb.VarKeyPlanID]
+	planID := q.Get(osb.VarKeyPlanID)
 	if planID != "" {
 		osbRequest.PlanID = &planID
 	}
-	operation := vars[osb.VarKeyOperation]
+	operation := q.Get(osb.VarKeyOperation)
 	if operation != "" {
 		typedOperation := osb.OperationKey(operation)
 		osbRequest.OperationKey = &typedOperation
@@ -428,17 +430,16 @@ func unpackBindingLastOperationRequest(
 	request.InstanceID = vars[osb.VarKeyInstanceID]
 	request.BindingID = vars[osb.VarKeyBindingID]
 
-	serviceID := vars[osb.VarKeyServiceID]
+	q := r.URL.Query()
+	serviceID := q.Get(osb.VarKeyServiceID)
 	if serviceID != "" {
 		request.ServiceID = &serviceID
 	}
-
-	planID := vars[osb.VarKeyPlanID]
+	planID := q.Get(osb.VarKeyPlanID)
 	if planID != "" {
 		request.PlanID = &planID
 	}
-
-	operation := vars[osb.VarKeyOperation]
+	operation := q.Get(osb.VarKeyOperation)
 	if operation != "" {
 		typedOperation := osb.OperationKey(operation)
 		request.OperationKey = &typedOperation
