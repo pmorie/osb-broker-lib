@@ -385,7 +385,7 @@ func unpackGetBindingRequest(r *http.Request, vars map[string]string) (*osb.GetB
 	return request, nil
 }
 
-// GetBindingLastOperation is the mux handler that dispatches binding last
+// BindingLastOperationHandler is the mux handler that dispatches binding last
 // operation requests to the broker's Interface.
 func (s *APISurface) BindingLastOperationHandler(w http.ResponseWriter, r *http.Request) {
 	s.Metrics.Actions.WithLabelValues("binding_last_operation").Inc()
