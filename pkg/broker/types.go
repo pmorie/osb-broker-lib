@@ -1,6 +1,6 @@
 package broker
 
-import osb "github.com/pmorie/go-open-service-broker-client/v2"
+import osb "sigs.k8s.io/go-open-service-broker-client/v2"
 
 // CatalogResponse is sent as the response to a catalog requests.
 type CatalogResponse struct {

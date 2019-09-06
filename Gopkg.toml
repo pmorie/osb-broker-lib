@@ -34,7 +34,7 @@
   version = "1.6.1"
 
 [[constraint]]
-  name = "github.com/pmorie/go-open-service-broker-client"
+  name = "sigs.k8s.io/go-open-service-broker-client"
   version = "0.0.5"
 
 [[constraint]]

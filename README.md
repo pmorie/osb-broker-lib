@@ -6,7 +6,7 @@
 
 A go library for developing an [Open Service
 Broker](https://github.com/openservicebrokerapi/servicebroker), using the
-[`pmorie/go-open-service-broker-client`](https://github.com/pmorie/go-open-service-broker-client)
+[`sigs.k8s.io/go-open-service-broker-client`](https://sigs.k8s.io/go-open-service-broker-client)
 OSB client library types. This project was originally created as part of the
 [OSB Starter Pack](https://github.com/pmorie/osb-starter-pack) project.
 
@@ -22,7 +22,7 @@ Pack](https://github.com/pmorie/osb-starter-pack).
 
 ```go
 import (
-    osb "github.com/pmorie/go-open-service-broker-client/v2"
+    osb "sigs.k8s.io/go-open-service-broker-client/v2"
     broker "github.com/pmorie/osb-broker-lib/pkg/"
 
     "gopkg.in/yaml.v2"
