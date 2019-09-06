@@ -12,8 +12,8 @@ import (
 	"github.com/pmorie/osb-broker-lib/pkg/metrics"
 	"github.com/pmorie/osb-broker-lib/pkg/rest"
 
-	osb "github.com/pmorie/go-open-service-broker-client/v2"
 	prom "github.com/prometheus/client_golang/prometheus"
+	osb "sigs.k8s.io/go-open-service-broker-client/v2"
 )
 
 func TestDeprovision(t *testing.T) {

@@ -38,7 +38,7 @@
   version = "v1.0.0"
 
 [[projects]]
-  name = "github.com/pmorie/go-open-service-broker-client"
+  name = "sigs.k8s.io/go-open-service-broker-client"
   packages = ["v2"]
   revision = "e8aa16c9036317bd59ced8921e9da6197ab577e3"
   version = "0.0.5"

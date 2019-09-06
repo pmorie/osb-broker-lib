@@ -10,7 +10,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/gorilla/mux"
 
-	osb "github.com/pmorie/go-open-service-broker-client/v2"
+	osb "sigs.k8s.io/go-open-service-broker-client/v2"
 
 	"github.com/pmorie/osb-broker-lib/pkg/broker"
 	"github.com/pmorie/osb-broker-lib/pkg/metrics"
@@ -385,7 +385,7 @@ func unpackGetBindingRequest(r *http.Request, vars map[string]string) (*osb.GetB
 	return request, nil
 }
 
-// GetBindingLastOperation is the mux handler that dispatches binding last
+// BindingLastOperationHandler is the mux handler that dispatches binding last
 // operation requests to the broker's Interface.
 func (s *APISurface) BindingLastOperationHandler(w http.ResponseWriter, r *http.Request) {
 	s.Metrics.Actions.WithLabelValues("binding_last_operation").Inc()

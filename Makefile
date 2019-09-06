@@ -7,7 +7,7 @@ fmtcheck: ## Check go formatting
 	@gofmt -l $(SOURCES) | grep ".*\.go"; if [ "$$?" = "0" ]; then exit 1; fi
 
 vet: ## Run go vet
-	@go tool vet ./pkg
+	@go vet ./pkg
 
 test: ## Run unit tests
 	@go test -cover ./pkg/...
