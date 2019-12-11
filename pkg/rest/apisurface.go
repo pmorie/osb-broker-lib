@@ -253,16 +253,18 @@ func unpackLastOperationRequest(r *http.Request) (*osb.LastOperationRequest, err
 	osbRequest := &osb.LastOperationRequest{}
 
 	vars := mux.Vars(r)
+	queries := r.URL.Query()
+
 	osbRequest.InstanceID = vars[osb.VarKeyInstanceID]
-	serviceID := vars[osb.VarKeyServiceID]
+	serviceID := queries.Get(osb.VarKeyServiceID)
 	if serviceID != "" {
 		osbRequest.ServiceID = &serviceID
 	}
-	planID := vars[osb.VarKeyPlanID]
+	planID := queries.Get(osb.VarKeyPlanID)
 	if planID != "" {
 		osbRequest.PlanID = &planID
 	}
-	operation := vars[osb.VarKeyOperation]
+	operation := queries.Get(osb.VarKeyOperation)
 	if operation != "" {
 		typedOperation := osb.OperationKey(operation)
 		osbRequest.OperationKey = &typedOperation
